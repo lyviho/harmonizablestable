@@ -16,7 +16,12 @@ For theoretical details see Sections 2.2. and 5.1.
 Matlab and R files in `single_path`. The matlab skript `per_freq_est.m` generates a 
 path of the process X and estimates the underlying i.i.d. frequencies Z_k with spectral
 density as their pdf. The results are saved as ´filename.mat´.
-´KDE.Rmd´ imports this `.mat` file and computes the kernel density estimator. 
-We use R because of convenience of the already integrated density estimation function.
+`KDE.Rmd` imports this `.mat` file and computes the kernel density estimator. 
+We use R because of its already integrated density estimation with various 
+kernel functions and bandwidth methods.
+
+Examples are included in the subfolder `matdata` for examples f1 and f2 in 
+`per_freq_est.m`, e.g. `f1a150_2.mat` corresponds to the frequency estimates for
+example f1 with alpha=1.5 and sample size 10^4. See `KDE.Rmd` for more details. 
 
 Details in Sections 4 and 5.2. of the paper. 
