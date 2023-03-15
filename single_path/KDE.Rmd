@@ -1,0 +1,130 @@
+---
+title: "Spectral density estimation for stationary real harmonizable symmetric stable processes"
+author: "Ly Viet Hoang"
+output: html_notebook
+---
+
+```{r}
+rm(list=ls())
+```
+
+```{r warning=false, message=false}
+library(R.matlab)
+library(ggplot2)
+library(latex2exp)
+library(tidyverse)
+```
+
+```{r}
+## Choose example i=1,2,3,4
+i <- 2
+
+## Choose alpha   ##
+# "150" for alpha=1.5 or "075" for alpha=0.75
+a_str <- "150"
+
+## Choose sample size ##
+# "_0": n=10^3,    N<=50, 
+# "_1": n=5*10^3,  N<=100,
+# "_2": n=10^4,    N<=316,
+# "_3": n=2*10^4,  N<=1700,
+n_str <- "_1"
+
+mat <- readMat(paste("matdata/f",i,"a",a_str,n_str,".mat", sep=""))
+Zhat <- mat$Z.hat
+Zhat_extend <- c(-Zhat,Zhat)
+Z <- mat$Z
+teval <- mat$t.eval
+feval <- mat$f.eval
+fval <- mat$fval
+frange <- mat$f.range
+
+# KDE
+kdeplot <- ggplot() + 
+  geom_density(mapping=aes(Zhat, color = "KDE"), 
+               kernel="gaussian",
+               bw = "SJ", 
+               # color = rgb(0, 0.4470, 0.7410),
+               lwd = 1) + 
+  geom_line(mapping=aes(feval,2*fval, color = "f"), 
+            # color = rgb(0.8500, 0.3250, 0.0980),
+            lty = 2, 
+            lwd = 1) + 
+  labs(x = TeX("$x$"),
+       y = TeX(paste("$f_", i, "(x)$")),
+       subtitle = TeX(paste("KDE $f_",i , "$ ($\\alpha=", mat$a,  
+                            "$, $h_{SJ}=", round(bw.SJ(Zhat),2), "$)"))) + 
+  scale_color_manual(name='',
+                     breaks=c('KDE', 'f'),
+                     values=c('KDE' = rgb(0, 0.4470, 0.7410), 
+                              'f' = rgb(0.8500, 0.3250, 0.0980))) + 
+  theme(
+    panel.background = element_rect(color = "black", fill = "transparent"),
+    strip.text.x = element_blank(),
+    strip.background = element_rect(colour="transparent", fill="transparent"),
+    legend.position=c(.73,.84),
+    legend.key=element_rect(fill=NA),
+    text = element_text(size=20),
+    aspect.ratio = 1)
+kdeplot
+```
+
+```{r}
+## save plot to eps file
+# ggsave(paste("f",i,"a", a_str, n_str, ".eps", sep=""))
+```
+
+
+```{r}
+## Evaluate L2-distance
+f1 <- function(x) 1/sqrt(2*pi)*exp(-x^2/2)
+f2 <- function(x) x^2*exp(-abs(x))/4
+f3 <- function(x) 1/x^2*as.integer(x>=1)
+f4 <- function(x) 1/2*as.integer(x<=1)
+f_list <- list(f1,f2,f3,f4)
+
+a_list <- list("075","150")
+n_list <- list("_0","_1","_2","_3")
+N_list <- list(c(10,20,50),
+               c(50,75,100),
+               c(100,200,300),
+               c(300,500,1000)) 
+
+L2dist <- tibble()
+for(i in 1:4){
+  f <- f_list[[i]]
+  for(j in 1:1){
+    a_str <- a_list[[j]]
+    for(k in 3:4){
+      n_str <- n_list[[k]]
+      mat <- readMat(paste("matdata/f",i,"a",a_str,n_str,"_zp.mat", sep=""))
+      Zhat <- mat$Z.hat
+      teval <- mat$t.eval
+      feval <- mat$f.eval
+      fval <- mat$fval
+      frange <- mat$f.range
+      for(N in N_list[[k]]){
+        Zhat_restr <- Zhat[1:N]
+        Zhat_restr_extend <- c(-Zhat_restr,Zhat_restr)
+        kde_restr <- ggplot() + 
+        geom_density(mapping=aes(Zhat_restr, color = "KDE"), 
+                   kernel="gaussian",
+                   bw = "SJ", 
+                   # color = rgb(0, 0.4470, 0.7410),
+                   lwd = 1)
+        kdedata <- ggplot_build(kde_restr)
+        x <- kdedata$data[[1]]$x
+        x_delta <- x[2]-x[1]
+        y_kde <- kdedata$data[[1]]$density
+        y_f <- 2*f(x)
+        dist <- sqrt(sum((y_kde-y_f)^2,na.rm = TRUE)*x_delta)
+        L2dist <- rbind(L2dist,
+                        tibble(alpha=mat$a,f_i=i,n=mat$n, N=N,L2_dist=dist))
+      }
+    }
+  }
+}
+L2dist 
+round(filter(L2dist,f_i[]==4)$L2_dist*10,digits=2)
+```
+
