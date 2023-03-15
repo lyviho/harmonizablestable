@@ -30,7 +30,13 @@ T=10;       % sample range [0,R]
 t_eval=linspace(0,T,n);
 
 %% Choose example 1 or 2
+% ------ % 
+% Set ex=1 or ex=2 to choose one of the two examples above. 
+% Example 2 takes slightly longer to compute since we use acceptance-
+% rejection to generate i.i.d. random variables with density f2
 ex=1;       
+% ------ %
+
 paths=zeros(L,n);
 rng('default')  % set seed for reproducability
 for i=1:L
@@ -82,10 +88,10 @@ if ex==1
 elseif ex==2
     f=f2;
 end
+
 Tf=alphasine(f,a);
 t2_eval=t_eval/2;
 Tf_est=(2*s0^a0-codiff)./(2.^(at+1).*ca(at));
-
 
 figure()
 plot(t2_eval,Tf_est,'Linewidth',2)
@@ -119,8 +125,6 @@ legend('$\widehat{f}$','$f$','interpreter','latex','fontsize',14)
 
 sgtitle(['$\alpha=$' num2str(a) ', $L=$' num2str(L) ...
         ', $T=$' num2str(T) ', $n=$' num2str(n) ', K=' num2str(K)],'interpreter','latex')
-
-
 
 
 %% Smoothing: Choose mollifier
