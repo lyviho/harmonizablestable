@@ -10,21 +10,21 @@ C=((1-a)/(gamma(2-a)*cos(pi*a/2)))*(a~=1)+2/pi*(a==1);
 
 % Fixed parameters
 K=1e4;              % Number of summands in series representation 
-T=2.5*1e3;          % Range of path, i.e. X(t), t in [0,T]
-delta=5e-1;
-t_eval=0:delta:T;
-n=length(t_eval);   % Number of equidistant sample points
+n=1e4;              % sample size       
+delta=0.5;          % t_i-t_{i-1}
+t_eval=(0:n)*delta;
+T=t_eval(end);      % Range of path, i.e. X(t), t in [0,T]
 
 %% Set number of est frequencies N
-error=2e-3;     % Decrease error for larger sample size n
+error=1e-3;     % Decrease error for larger sample size n
 N=floor((n*error)^(5/2));
 
 %%
 % Choose example
-% i=2;
+i=2;
 
 % Optionally run loop for all four examples
-for i=1:4
+% for i=1:4
 
 % Generate seq. of r.v.'s
 rng('default')  % set seed
@@ -98,9 +98,9 @@ toc
 %% save and compute KDE in R
 a_str = '150';
 n_str = '_0';
-save(['f' num2str(i) 'a' a_str n_str])
+% save(['f' num2str(i) 'a' a_str n_str])
 
-end  % end of loop over all examples 
+% end  % end of loop over all examples 
 
 %% Histogram
 nbins=15;
